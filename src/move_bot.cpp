@@ -20,104 +20,57 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
  * DEALINGS IN THE SOFTWARE. 
- * 
- * @file move_bot.cpp
- * @author Maaruf Vazifdar
- * @brief brief.
- * @version 1.0
- * @date 11/23/2021
- * @copyright  Copyright (c) 2021
- * 
  */
 
-#include <move_bot.hpp>
 #include <ros/ros.h>
+#include <move_bot.hpp>
 
-
-/**
- * @brief Publish positive angular velocity on cmd_vel topic to turn robot in 
- *        left direction.
- * @param void
- * @return void
- */
+// Turn counter-clockwise (left)
 void MoveBot::turnLeft() {
-  ros::Rate rate(10);
-    vel.linear.x = 0;
-    vel.angular.z = 0.3;
-    ROS_DEBUG_STREAM("Forward velocity= " << vel.linear.x <<
-    ", Turn velocity=" << vel.angular.z);
-    pub.publish(vel);
-    ROS_INFO_STREAM("Turning Left");
+  vel.linear.x = 0.0;
+  vel.angular.z = 0.3;
+  pub.publish(vel);
+  ROS_INFO_STREAM("Turning Left");
 }
 
-/**
- * @brief Publish negative angular velocity on cmd_vel topic to turn robot in 
- *        right direction.
- * @param void
- * @return void
- */
+// Turn clockwise (right)
 void MoveBot::turnRight() {
-  ros::Rate rate(10);
-    vel.linear.x = 0;
-    vel.angular.z = -0.3;
-    ROS_DEBUG_STREAM("Forward velocity= " << vel.linear.x <<
-    ", Turn velocity=" << vel.angular.z);
-    pub.publish(vel);
-    ROS_INFO_STREAM("Turning Right");
+  vel.linear.x = 0.0;
+  vel.angular.z = -0.3;
+  pub.publish(vel);
+  ROS_INFO_STREAM("Turning Right");
 }
 
-/**
- * @brief Publish  positive linear velocity on cmd_vel topic to move robot in 
- *        forward direction.
- * @param void
- * @return void
- */
+// Move straight forward
 void MoveBot::moveForward() {
-  ros::Rate rate(10);
-  vel.angular.z = 0;
   vel.linear.x = 0.2;
-  ROS_DEBUG_STREAM("Forward velocity= " << vel.linear.x <<
-  ", Turn velocity=" << vel.angular.z);
+  vel.angular.z = 0.0;
   pub.publish(vel);
   ROS_INFO_STREAM("Moving Forward");
 }
 
-/**
- * @brief Subscriber Callback for Lidar sensor.
- * @param sensor_msgs::LaserScan::ConstPtr& msg - laser data 
- * @return void
- */
+// Triggered every time LiDAR publishes a new laser scan
 void MoveBot::LaserscanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
-  if (msg->ranges[330] < 0.3 || msg->ranges[0] < 0.3)
+  // If an obstacle is detected in front or front-right within 0.3m, turn left
+  if (msg->ranges[330] < 0.3 || msg->ranges[0] < 0.3) {
     turnLeft();
-  else if (msg->ranges[30] < 0.3)
+  } else if (msg->ranges[30] < 0.3) {
+    // If an obstacle is detected on the front-left within 0.3m, turn right
     turnRight();
-  else
+  } else {
+    // Path is clear, drive straight
     moveForward();
+  }
 }
 
-
 int main(int argc, char **argv) {
-  /**
-   * The ros::init() function needs to see argc and argv so that it can perform
-   * any ROS arguments and name remapping that were provided at the command line.
-   * For programmatic remappings you can use a different version of init() which takes
-   * remappings directly, but for most command-line programs, passing argc and argv is
-   * the easiest way to do it.  The third argument to init() is the name of the node.
-   *
-   * You must call one of the versions of ros::init() before using any other
-   * part of the ROS system.
-   */
+  // Initialize the ROS node
   ros::init(argc, argv, "walker");
 
-  // Object of class MoveBot to call constructor and start moving the robot
+  // Create an instance of the robot controller
   MoveBot M1;
 
-  /**
-   * ros::spin() will enter a loop, pumping callbacks.  With this version, all
-   * callbacks will be called from within this thread (the main one).  ros::spin()
-   * will exit when Ctrl-C is pressed, or the node is shutdown by the master.
-   */
+  // Keep processing incoming laser scans until Ctrl+C
   ros::spin();
   return 0;
 }

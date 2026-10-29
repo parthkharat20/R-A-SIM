@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * MIT License
  *
@@ -20,67 +22,28 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
  * DEALINGS IN THE SOFTWARE. 
- * 
- * @file move_bot.hpp
- * @author Maaruf Vazifdar
- * @brief Header file for Class MoveBot, its attributes and members.
- * @version 1.0
- * @date 11/23/2021
- * @copyright  Copyright (c) 2021
- * 
  */
 
+#include <geometry_msgs/Twist.h>
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
-#include<geometry_msgs/Twist.h>
 
-#pragma once
 class MoveBot {
  public:
-  /**
-   * NodeHandle is the main access point to communications with the ROS system.
-   * The first NodeHandle constructed will fully initialize this node, and the last
-   * NodeHandle destructed will close down the node.
-   */
   ros::NodeHandle n;
   ros::Publisher pub;
   ros::Subscriber sub;
   geometry_msgs::Twist vel;
 
-  /**
-   * @brief Constructor for class MoveBot
-   * @param void
-   */
   MoveBot() {
+    // Publish velocity commands to /cmd_vel
     pub = n.advertise<geometry_msgs::Twist>("cmd_vel", 10);
+    // Subscribe to LiDAR data from /scan
     sub = n.subscribe("scan", 10, &MoveBot::LaserscanCallback, this);
   }
 
-  /**
-   * @brief Commands turtlebot to turn left.
-   * @param void 
-   * @return void
-   */  
   void turnLeft();
-
-  /**
-   * @brief Commands turtlebot to turn right. 
-   * @param void 
-   * @return void
-   */
-  void  turnRight();
-
-  /**
-   * @brief Commands turtlebot to move forward. 
-   * @param void 
-   * @return void
-   */
+  void turnRight();
   void moveForward();
-
-  /**
-   * @brief Callback for topic "scan" subscriber. 
-   * @param const sensor_msgs::LaserScan::ConstPtr& msg 
-   * @return void
-   */
   void LaserscanCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
 };
